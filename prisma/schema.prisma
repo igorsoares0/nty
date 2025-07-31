@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+model Settings {
+  id                    String  @id @default(cuid())
+  shopId                String  @unique
+  ownerEmail            String?
+  autoNotificationEnabled Boolean @default(true)
+  
+  // First notification settings
+  firstEmailEnabled     Boolean @default(true)
+  firstSmsEnabled       Boolean @default(false)
+  
+  // Thank you settings
+  thankYouEmailEnabled  Boolean @default(true)
+  thankYouSmsEnabled    Boolean @default(false)
+  
+  // Reminder settings  
+  reminderEmailEnabled  Boolean @default(false)
+  reminderSmsEnabled    Boolean @default(false)
+  
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model EmailTemplate {
+  id              String @id @default(cuid())
+  shopId          String
+  type            String // 'first', 'thankyou', 'reminder'
+  subject         String @default("Back in Stock Notification")
+  headline        String @default("Great News!")
+  bodyText        String @default("The item you requested is now back in stock.")
+  buttonText      String @default("Shop Now")
+  buttonColor     String @default("#ffffff")  
+  buttonBgColor   String @default("#000000")
+  buttonRadius    Int    @default(4)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([shopId, type])
+}
+
+model SmsTemplate {
+  id              String @id @default(cuid())
+  shopId          String
+  type            String // 'first', 'thankyou', 'reminder'
+  message         String @default("Great news! The item you requested is back in stock. Visit our store to get yours now!")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([shopId, type])
+}
+
+model ProductSettings {
+  id              String  @id @default(cuid())
+  shopId          String
+  productId       String
+  showNotification Boolean @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([shopId, productId])
+}
+
+model ButtonSettings {
+  id              String @id @default(cuid())
+  shopId          String @unique
+  
+  // Button styling
+  backgroundColor String @default("#000000")
+  textColor       String @default("#ffffff")
+  borderRadius    Int    @default(4)
+  textSize        Int    @default(16)
+  textContent     String @default("Notify Me")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FormSettings {
+  id                String  @id @default(cuid())
+  shopId            String  @unique
+  
+  // Form styling
+  formBgColor       String  @default("#ffffff")
+  buttonColor       String  @default("#000000")
+  buttonBorderRadius Int    @default(4)
+  textSize          Int     @default(14)
+  textColor         String  @default("#333333")
+  
+  // Form configuration
+  phoneNumberEnabled Boolean @default(false)
+  formTitle         String  @default("Get notified when back in stock!")
+  formDescription   String  @default("Enter your email to be notified when this item is available.")
+  buttonText        String  @default("Subscribe")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  email             String
+  phone             String?
+  productId         String
+  productTitle      String?
+  productUrl        String?
+  shopId            String
+  status            String   @default("active") // active, notified, cancelled
+  
+  // Subscription metadata
+  subscribedAt      DateTime @default(now())
+  notifiedAt        DateTime?
+  reactivatedAt     DateTime?
+  reactivationCount Int      @default(0)
+  
+  // Tracking data
+  userAgent         String?
+  ipAddress         String?
+  source            String   @default("widget") // widget, api, admin
+  
+  // Relations
+  notifications     Notification[]
+  logs              SubscriptionLog[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@unique([email, productId, shopId])
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  type           String   // first_email, first_sms, thankyou_email, thankyou_sms, reminder_email, reminder_sms, back_in_stock
+  status         String   @default("pending") // pending, sent, failed, cancelled
+  
+  // Notification content
+  subject        String?
+  content        String
+  recipient      String   // email or phone
+  
+  // Delivery tracking
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  
+  // Error handling
+  attempts       Int      @default(0)
+  maxAttempts    Int      @default(3)
+  errorMessage   String?
+  
+  // External service IDs
+  providerId     String?  // Email service provider ID
+  providerType   String?  // sendgrid, mailgun, twilio, etc.
+  
+  // Relations
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SubscriptionLog {
+  id             String   @id @default(cuid())
+  subscriptionId String?
+  event          String   // subscribed, notified, reactivated, cancelled, error
+  data           String?  // JSON data
+  timestamp      DateTime @default(now())
+  
+  // Relations
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+}
+
+model NotificationQueue {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  type           String   // first_email, first_sms, thankyou_email, etc.
+  scheduledFor   DateTime
+  processedAt    DateTime?
+  status         String   @default("pending") // pending, processing, completed, failed
+  data           String   // JSON data
+  attempts       Int      @default(0)
+  maxAttempts    Int      @default(3)
+  errorMessage   String?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

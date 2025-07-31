@@ -1,0 +1,19 @@
+{
+  "notifications": {
+    "widget": {
+      "buttonText": "Notify Me",
+      "formTitle": "Get notified when back in stock!",
+      "formDescription": "Enter your email to be notified when this item is available.",
+      "emailPlaceholder": "Enter your email",
+      "phonePlaceholder": "Phone number (optional)",
+      "submitButton": "Subscribe",
+      "successTitle": "Thank you!",
+      "successMessage": "You'll be notified when this item is back in stock.",
+      "errorTitle": "Something went wrong",
+      "errorMessage": "Please try again or contact support.",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "alreadySubscribed": "You are already subscribed to notifications for this product"
+    }
+  }
+}

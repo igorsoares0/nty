@@ -1,0 +1,537 @@
+/* NotifyMe Widget Styles - App Embed Block */
+
+.notyys-embed-widget {
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.notyys-embed-widget *,
+.notyys-embed-widget *::before,
+.notyys-embed-widget *::after {
+  box-sizing: border-box;
+}
+
+/* Button Styles */
+.notyys-notify-button {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  user-select: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.notyys-notify-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notyys-notify-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.notyys-notify-button:focus {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+}
+
+.notyys-notify-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Modal Styles */
+.notyys-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: notyys-fadeIn 0.3s ease;
+  padding: 20px;
+}
+
+@keyframes notyys-fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+.notyys-modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.notyys-modal-content {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.1);
+  animation: notyys-slideUp 0.3s ease;
+}
+
+@keyframes notyys-slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Form Container */
+.notyys-form-container {
+  padding: 32px 28px 28px;
+}
+
+.notyys-form-title {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.notyys-form-description {
+  margin: 0 0 24px 0;
+  color: #666;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+/* Form Styles */
+.notyys-input-group {
+  margin-bottom: 20px;
+}
+
+.notyys-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.notyys-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: white;
+  color: #333;
+}
+
+.notyys-input:focus {
+  outline: none;
+  border-color: #0078d4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+}
+
+.notyys-input.error {
+  border-color: #d83b01;
+  box-shadow: 0 0 0 3px rgba(216, 59, 1, 0.1);
+}
+
+.notyys-input::placeholder {
+  color: #999;
+}
+
+.notyys-error-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #d83b01;
+  font-weight: 500;
+}
+
+/* Submit Button */
+.notyys-submit-btn {
+  width: 100%;
+  padding: 16px 24px;
+  background: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.notyys-submit-btn:hover:not(:disabled) {
+  background: #106ebe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+}
+
+.notyys-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 120, 212, 0.2);
+}
+
+.notyys-submit-btn:focus {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+}
+
+.notyys-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Close Button */
+.notyys-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.notyys-close-btn:hover {
+  background: #f5f5f5;
+  color: #333;
+  transform: scale(1.1);
+}
+
+.notyys-close-btn:focus {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+}
+
+/* Message Styles */
+.notyys-message {
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notyys-success {
+  background: #dff6dd;
+  color: #107c10;
+  border: 1px solid #c4e3c1;
+}
+
+.notyys-error {
+  background: #fde7e9;
+  color: #d83b01;
+  border: 1px solid #f2c4c7;
+}
+
+.notyys-success-icon,
+.notyys-error-icon {
+  font-size: 18px;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notyys-message strong {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.notyys-message p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .notyys-modal {
+    padding: 16px;
+    align-items: flex-end;
+  }
+  
+  .notyys-modal-content {
+    width: 100%;
+    max-height: 85vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    animation: notyys-slideUp 0.3s ease;
+  }
+  
+  .notyys-form-container {
+    padding: 24px 20px 20px;
+  }
+  
+  .notyys-form-title {
+    font-size: 20px;
+  }
+  
+  .notyys-form-description {
+    font-size: 14px;
+  }
+  
+  .notyys-input {
+    font-size: 16px; /* Previne zoom no iOS */
+    padding: 12px 14px;
+  }
+  
+  .notyys-submit-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+  
+  .notyys-close-btn {
+    top: 12px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notyys-modal {
+    padding: 0;
+  }
+  
+  .notyys-modal-content {
+    max-height: 100vh;
+    border-radius: 0;
+    animation: notyys-slideUpMobile 0.3s ease;
+  }
+  
+  @keyframes notyys-slideUpMobile {
+    from { 
+      transform: translateY(100%);
+    }
+    to { 
+      transform: translateY(0);
+    }
+  }
+  
+  .notyys-form-container {
+    padding: 20px 16px 16px;
+  }
+  
+  .notyys-notify-button {
+    width: 100%;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .notyys-modal-content {
+    background: #1f1f1f;
+    color: white;
+  }
+  
+  .notyys-form-title {
+    color: white;
+  }
+  
+  .notyys-form-description {
+    color: #cccccc;
+  }
+  
+  .notyys-label {
+    color: #e6e6e6;
+  }
+  
+  .notyys-input {
+    background: #2d2d2d;
+    border-color: #444444;
+    color: white;
+  }
+  
+  .notyys-input:focus {
+    border-color: #0078d4;
+    box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
+  }
+  
+  .notyys-input.error {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+  }
+  
+  .notyys-input::placeholder {
+    color: #999999;
+  }
+  
+  .notyys-error-text {
+    color: #ff6b6b;
+  }
+  
+  .notyys-close-btn {
+    color: #cccccc;
+  }
+  
+  .notyys-close-btn:hover {
+    background: #333333;
+    color: white;
+  }
+  
+  .notyys-success {
+    background: rgba(16, 124, 16, 0.2);
+    color: #4caf50;
+    border-color: rgba(76, 175, 80, 0.3);
+  }
+  
+  .notyys-error {
+    background: rgba(216, 59, 1, 0.2);
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.3);
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .notyys-input {
+    border-width: 3px;
+  }
+  
+  .notyys-notify-button,
+  .notyys-submit-btn {
+    border: 2px solid;
+  }
+  
+  .notyys-modal-backdrop {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .notyys-notify-button,
+  .notyys-submit-btn,
+  .notyys-close-btn,
+  .notyys-input,
+  .notyys-modal,
+  .notyys-modal-content {
+    transition: none;
+    animation: none;
+  }
+  
+  .notyys-notify-button:hover,
+  .notyys-submit-btn:hover {
+    transform: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .notyys-embed-widget {
+    display: none !important;
+  }
+}
+
+/* Focus Management for Accessibility */
+.notyys-modal:not([style*="display: none"]) .notyys-input:first-of-type {
+  /* Focus will be set via JavaScript */
+}
+
+/* Loading State for Submit Button */
+.notyys-submit-btn[disabled] {
+  position: relative;
+  color: transparent;
+}
+
+.notyys-submit-btn[disabled]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: notyys-spin 1s linear infinite;
+}
+
+@keyframes notyys-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ensure widget doesn't interfere with theme styles */
+.notyys-embed-widget {
+  isolation: isolate;
+}
+
+/* Custom scrollbar for modal content */
+.notyys-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notyys-modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.notyys-modal-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.notyys-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

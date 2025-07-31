@@ -1,0 +1,24 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "6cdca756a3dcc2f7e886b190a95c33e1"
+name = "notyyss"
+handle = "notyyss"
+application_url = "https://suffer-mirror-characters-leader.trycloudflare.com"
+embedded = true
+
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2025-07"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = ["https://suffer-mirror-characters-leader.trycloudflare.com/auth/callback", "https://suffer-mirror-characters-leader.trycloudflare.com/auth/shopify/callback", "https://suffer-mirror-characters-leader.trycloudflare.com/api/auth/callback"]
+
+[pos]
+embedded = false

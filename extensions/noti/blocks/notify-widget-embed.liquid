@@ -1,0 +1,102 @@
+{% comment %}
+App Embed Block - Widget "Notify Me" para produtos fora de estoque
+Injeta automaticamente no body de todas as páginas
+Só renderiza em páginas de produto fora de estoque
+{% endcomment %}
+
+<div id="notyys-embed-container" style="display: none;">
+  <!-- Widget será renderizado via JavaScript -->
+</div>
+
+{% comment %} Busca configurações dos metafields da shop {% endcomment %}
+{% assign button_settings = shop.metafields.notyys_config.button_settings %}
+{% assign form_settings = shop.metafields.notyys_config.form_settings %}
+{% assign general_settings = shop.metafields.notyys_config.general_settings %}
+{% assign disabled_products = shop.metafields.notyys_config.disabled_products %}
+
+<script>
+  window.notyysEmbedConfig = {
+    shopDomain: {{ shop.permanent_domain | json }},
+    shopId: {{ shop.id | json }},
+    currency: {{ shop.currency | json }},
+    moneyFormat: {{ shop.money_format | json }},
+    
+    // Configurações do widget carregadas dos metafields
+    widget: {
+      enabled: {% if settings.enabled == false %}false{% else %}true{% endif %},
+      
+      // Configurações do botão
+      {% if button_settings.value %}
+        {% assign button_config = button_settings.value | parse_json %}
+        buttonText: {{ button_config.textContent | default: "Notify Me" | json }},
+        buttonColor: {{ button_config.backgroundColor | default: "#000000" | json }},
+        textColor: {{ button_config.textColor | default: "#ffffff" | json }},
+        borderRadius: {{ button_config.borderRadius | default: 4 }},
+        textSize: {{ button_config.textSize | default: 16 }},
+      {% else %}
+        buttonText: "Notify Me",
+        buttonColor: "#000000",
+        textColor: "#ffffff",
+        borderRadius: 4,
+        textSize: 16,
+      {% endif %}
+      
+      // Configurações do formulário
+      {% if form_settings.value %}
+        {% assign form_config = form_settings.value | parse_json %}
+        formTitle: {{ form_config.formTitle | default: "Get notified when back in stock!" | json }},
+        formDescription: {{ form_config.formDescription | default: "Enter your email to be notified when this item is available." | json }},
+        formButtonText: {{ form_config.buttonText | default: "Subscribe" | json }},
+        phoneNumberEnabled: {{ form_config.phoneNumberEnabled | default: false }},
+        formBgColor: {{ form_config.formBgColor | default: "#ffffff" | json }},
+        formTextColor: {{ form_config.textColor | default: "#333333" | json }},
+        buttonBorderRadius: {{ form_config.buttonBorderRadius | default: 4 }},
+        formTextSize: {{ form_config.textSize | default: 14 }},
+      {% else %}
+        formTitle: "Get notified when back in stock!",
+        formDescription: "Enter your email to be notified when this item is available.",
+        formButtonText: "Subscribe",
+        phoneNumberEnabled: false,
+        formBgColor: "#ffffff",
+        formTextColor: "#333333",
+        buttonBorderRadius: 4,
+        formTextSize: 14,
+      {% endif %}
+      
+      // Produtos desabilitados
+      {% if disabled_products.value %}
+        {% assign disabled_config = disabled_products.value | parse_json %}
+        disabledProducts: {{ disabled_config.productIds | default: array | json }},
+      {% else %}
+        disabledProducts: [],
+      {% endif %}
+      
+      // Metadados
+      lastUpdated: "{{ 'now' | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+      version: "1.0.0"
+    }
+  };
+</script>
+
+<script src="{{ 'notify-widget.js' | asset_url }}" defer></script>
+<link rel="stylesheet" href="{{ 'notify-widget.css' | asset_url }}">
+
+{% schema %}
+{
+  "name": "Back in Stock Widget",
+  "target": "body",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows 'Notify Me' button on out-of-stock products. Configure in app settings."
+    },
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Enable notifications",
+      "default": true,
+      "info": "Turn off to disable widget"
+    }
+  ]
+}
+{% endschema %}
