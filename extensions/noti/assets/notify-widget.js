@@ -352,16 +352,25 @@
           
           <div id="notyys-modal" class="notyys-modal" style="display: none;" role="dialog" aria-labelledby="notyys-form-title" aria-modal="true">
             <div class="notyys-modal-backdrop"></div>
-            <div class="notyys-modal-content">
+            <div class="notyys-modal-content" style="background-color: ${this.appConfig.formBgColor};">
               <button type="button" class="notyys-close-btn" aria-label="Close notification form">×</button>
               
               <div class="notyys-form-container">
-                <h3 id="notyys-form-title" class="notyys-form-title">${this.appConfig.formTitle}</h3>
-                <p class="notyys-form-description">${this.appConfig.formDescription}</p>
+                <h3 id="notyys-form-title" class="notyys-form-title" style="
+                  color: ${this.appConfig.formTextColor};
+                  font-size: ${this.appConfig.formTextSize + 8}px;
+                ">${this.appConfig.formTitle}</h3>
+                <p class="notyys-form-description" style="
+                  color: ${this.appConfig.formTextColor};
+                  font-size: ${this.appConfig.formTextSize}px;
+                ">${this.appConfig.formDescription}</p>
                 
                 <form id="notyys-subscription-form" novalidate>
                   <div class="notyys-input-group">
-                    <label for="notyys-email" class="notyys-label">Email address *</label>
+                    <label for="notyys-email" class="notyys-label" style="
+                      color: ${this.appConfig.formTextColor};
+                      font-size: ${this.appConfig.formTextSize - 1}px;
+                    ">Email address *</label>
                     <input 
                       type="email" 
                       id="notyys-email" 
@@ -371,13 +380,17 @@
                       class="notyys-input"
                       autocomplete="email"
                       aria-describedby="notyys-email-error"
+                      style="font-size: ${this.appConfig.formTextSize}px;"
                     />
                     <div id="notyys-email-error" class="notyys-error-text" style="display: none;"></div>
                   </div>
                   
                   ${this.appConfig.phoneNumberEnabled ? `
                     <div class="notyys-input-group">
-                      <label for="notyys-phone" class="notyys-label">Phone number</label>
+                      <label for="notyys-phone" class="notyys-label" style="
+                        color: ${this.appConfig.formTextColor};
+                        font-size: ${this.appConfig.formTextSize - 1}px;
+                      ">Phone number</label>
                       <input 
                         type="tel" 
                         id="notyys-phone" 
@@ -385,11 +398,16 @@
                         placeholder="Phone number (optional)" 
                         class="notyys-input"
                         autocomplete="tel"
+                        style="font-size: ${this.appConfig.formTextSize}px;"
                       />
                     </div>
                   ` : ''}
                   
-                  <button type="submit" class="notyys-submit-btn" id="notyys-submit-btn">
+                  <button type="submit" class="notyys-submit-btn" id="notyys-submit-btn" style="
+                    background-color: ${this.appConfig.buttonColor};
+                    border-radius: ${this.appConfig.buttonBorderRadius}px;
+                    font-size: ${this.appConfig.formTextSize + 2}px;
+                  ">
                     ${this.appConfig.formButtonText}
                   </button>
                 </form>
