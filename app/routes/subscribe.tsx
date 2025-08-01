@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import db from "../db.server";
+import { sendThankYouEmail } from "../utils/email.server";
 
 // App Proxy endpoint: /subscribe (após remoção do prefixo /apps/notyys)
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -102,6 +103,27 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
       
       console.log(`🎯 [SUBSCRIBE] SUCCESS:`, subscription.id);
+      
+      // Enviar email de agradecimento (não bloquear response se falhar)
+      setTimeout(async () => {
+        try {
+          const emailSent = await sendThankYouEmail({
+            email: subscription.email,
+            productTitle: subscription.productTitle || 'Product',
+            productUrl: subscription.productUrl || '',
+            shopId: subscription.shopId,
+            shopDomain: shopDomain,
+          });
+          
+          if (emailSent) {
+            console.log(`🎯 [EMAIL] Thank you email sent to:`, subscription.email);
+          } else {
+            console.log(`🎯 [EMAIL] Failed to send thank you email to:`, subscription.email);
+          }
+        } catch (emailError) {
+          console.error(`🎯 [EMAIL] Error sending thank you email:`, emailError);
+        }
+      }, 100); // Enviar após 100ms para não bloquear response
       
       return json({
         success: true,
