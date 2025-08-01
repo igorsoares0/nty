@@ -3,7 +3,7 @@
 client_id = "6cdca756a3dcc2f7e886b190a95c33e1"
 name = "notyyss"
 handle = "notyyss"
-application_url = "https://empty-satisfied-evolution-cleanup.trycloudflare.com"
+application_url = "https://remaining-treat-weather-whatever.trycloudflare.com"
 embedded = true
 
 [build]
@@ -18,7 +18,7 @@ api_version = "2025-07"
 scopes = "write_products"
 
 [auth]
-redirect_urls = ["https://empty-satisfied-evolution-cleanup.trycloudflare.com/auth/callback", "https://empty-satisfied-evolution-cleanup.trycloudflare.com/auth/shopify/callback", "https://empty-satisfied-evolution-cleanup.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://remaining-treat-weather-whatever.trycloudflare.com/auth/callback", "https://remaining-treat-weather-whatever.trycloudflare.com/auth/shopify/callback", "https://remaining-treat-weather-whatever.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false

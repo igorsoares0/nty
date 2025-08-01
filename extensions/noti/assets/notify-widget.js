@@ -329,6 +329,13 @@
           <button 
             id="notyys-notify-btn"
             class="notyys-notify-button"
+            type="button"
+            data-notyys-widget="true"
+            data-action="notify"
+            data-no-cart="true"
+            onmousedown="event.stopPropagation(); return false;"
+            onmouseup="event.stopPropagation(); return false;"
+            onclick="event.stopPropagation(); event.preventDefault(); return false;"
             style="
               background-color: ${this.appConfig.buttonColor};
               color: ${this.appConfig.textColor};
@@ -344,6 +351,7 @@
               text-decoration: none;
               font-family: inherit;
               line-height: 1.2;
+              pointer-events: auto;
             "
             aria-label="Get notified when this product is back in stock"
           >
@@ -365,7 +373,10 @@
                   font-size: ${this.appConfig.formTextSize}px;
                 ">${this.appConfig.formDescription}</p>
                 
-                <form id="notyys-subscription-form" novalidate>
+                <form 
+                  id="notyys-subscription-form" 
+                  novalidate
+                >
                   <div class="notyys-input-group">
                     <label for="notyys-email" class="notyys-label" style="
                       color: ${this.appConfig.formTextColor};
@@ -403,11 +414,16 @@
                     </div>
                   ` : ''}
                   
-                  <button type="submit" class="notyys-submit-btn" id="notyys-submit-btn" style="
-                    background-color: ${this.appConfig.buttonColor};
-                    border-radius: ${this.appConfig.buttonBorderRadius}px;
-                    font-size: ${this.appConfig.formTextSize + 2}px;
-                  ">
+                  <button 
+                    type="button" 
+                    class="notyys-submit-btn" 
+                    id="notyys-submit-btn"
+                    style="
+                      background-color: ${this.appConfig.buttonColor};
+                      border-radius: ${this.appConfig.buttonBorderRadius}px;
+                      font-size: ${this.appConfig.formTextSize + 2}px;
+                    "
+                  >
                     ${this.appConfig.formButtonText}
                   </button>
                 </form>
@@ -440,22 +456,88 @@
       const form = document.getElementById('notyys-subscription-form');
       const closeBtn = document.querySelector('.notyys-close-btn');
       const backdrop = document.querySelector('.notyys-modal-backdrop');
+      const submitBtn = document.getElementById('notyys-submit-btn');
       
-      notifyBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.openModal();
+      // ISOLAMENTO AGRESSIVO para o botão Notify Me
+      if (notifyBtn) {
+        // Remove todos os event listeners existentes clonando o elemento
+        const newNotifyBtn = notifyBtn.cloneNode(true);
+        notifyBtn.parentNode.replaceChild(newNotifyBtn, notifyBtn);
+        
+        // Adiciona APENAS nosso event listener com captura máxima
+        newNotifyBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          
+          this.log('Notify button clicked - opening modal');
+          this.openModal();
+          
+          return false;
+        }, true);
+        
+        // Bloqueia outros eventos também
+        ['mousedown', 'mouseup', 'touchstart', 'touchend'].forEach(eventType => {
+          newNotifyBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+          }, true);
+        });
+      }
+      
+      closeBtn?.addEventListener('click', () => {
+        this.closeModal();
       });
       
-      closeBtn?.addEventListener('click', () => this.closeModal());
-      backdrop?.addEventListener('click', () => this.closeModal());
-      form?.addEventListener('submit', (e) => this.handleSubmit(e));
+      backdrop?.addEventListener('click', () => {
+        this.closeModal();
+      });
+      
+      // Submit button com isolamento
+      if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          
+          this.log('Submit button clicked - processing subscription');
+          
+          setTimeout(() => {
+            this.handleSubmitDirect();
+          }, 10);
+          
+          return false;
+        }, true);
+      }
+      
+      // Form submit como backup
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        this.handleSubmit(e);
+        return false;
+      }, true);
       
       // Fecha modal com Escape
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display !== 'none') {
+        if (e.key === 'Escape' && modal && modal.style.display !== 'none') {
           this.closeModal();
         }
       });
+      
+      // Interceptação global para impedir qualquer interferência
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'notyys-notify-btn') {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          this.log('Global click intercepted on notify button');
+          this.openModal();
+          return false;
+        }
+      }, true);
     }
     
     positionWidget() {
@@ -579,6 +661,15 @@
       });
     }
     
+    async handleSubmitDirect() {
+      const form = document.getElementById('notyys-subscription-form');
+      const formData = new FormData(form);
+      const submitBtn = document.getElementById('notyys-submit-btn');
+      const originalText = submitBtn.textContent;
+      
+      await this.processSubmission(formData, submitBtn, originalText);
+    }
+    
     async handleSubmit(e) {
       e.preventDefault();
       
@@ -587,6 +678,10 @@
       const submitBtn = document.getElementById('notyys-submit-btn');
       const originalText = submitBtn.textContent;
       
+      await this.processSubmission(formData, submitBtn, originalText);
+    }
+    
+    async processSubmission(formData, submitBtn, originalText) {
       // Validate form
       const errors = this.validateForm(formData);
       if (Object.keys(errors).length > 0) {
@@ -603,30 +698,81 @@
       const productId = this.getProductId();
       const productTitle = this.getProductTitle();
       
-      try {
-        this.log('Submitting subscription:', { email, phone, productId, productTitle });
-        
-        const response = await fetch(`https://${window.notyysEmbedConfig.shopDomain}/apps/notyys-subscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            phone,
-            productId,
-            productTitle,
-            productUrl: window.location.href,
-            shopId: window.notyysEmbedConfig.shopId
-          })
+      const requestData = {
+        email,
+        phone,
+        productId,
+        productTitle,
+        productUrl: window.location.href,
+        shopId: window.notyysEmbedConfig?.shopId || window.notyysEmbedConfig?.shopDomain
+      };
+      
+      this.log('Request data:', requestData);
+      this.log('Window config:', window.notyysEmbedConfig);
+      
+      // Verifica se temos os dados necessários
+      if (!requestData.email || !requestData.productId || !requestData.shopId) {
+        this.log('Missing required data:', {
+          hasEmail: !!requestData.email,
+          hasProductId: !!requestData.productId,
+          hasShopId: !!requestData.shopId
         });
+        this.showError();
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+      
+      try {
+        this.log('Submitting subscription:', requestData);
         
-        if (response.ok) {
+        // URL do App Proxy (mesma origem da loja)
+        const proxyUrl = `https://${window.notyysEmbedConfig?.shopDomain}/apps/notyys/subscribe`;
+        
+        this.log('Using App Proxy URL:', proxyUrl);
+        
+        const possibleUrls = [
+          proxyUrl
+        ];
+        
+        let subscriptionResponse = null;
+        let subscriptionError = null;
+        
+        for (const url of possibleUrls) {
+          try {
+            this.log(`Trying to submit subscription to: ${url}`);
+            
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestData)
+            });
+            
+            this.log(`Response status for ${url}:`, response.status);
+            
+            if (response.ok) {
+              const responseData = await response.json();
+              this.log(`Success response from ${url}:`, responseData);
+              subscriptionResponse = response;
+              break;
+            } else {
+              const errorText = await response.text();
+              this.log(`Error response from ${url}:`, { status: response.status, body: errorText });
+              subscriptionError = { status: response.status, message: errorText, url };
+            }
+          } catch (fetchError) {
+            this.log(`Network error for ${url}:`, fetchError);
+            subscriptionError = { error: fetchError, url };
+          }
+        }
+        
+        if (subscriptionResponse && subscriptionResponse.ok) {
           this.log('Subscription successful');
           this.showSuccess();
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          this.log('Subscription failed:', errorData);
+          this.log('All subscription attempts failed. Last error:', subscriptionError);
           this.showError();
         }
       } catch (error) {

@@ -28,5 +28,10 @@ scopes = "write_products"
 [auth]
 redirect_urls = ["https://austria-dom-pubs-agricultural.trycloudflare.com/auth/callback", "https://austria-dom-pubs-agricultural.trycloudflare.com/auth/shopify/callback", "https://austria-dom-pubs-agricultural.trycloudflare.com/api/auth/callback"]
 
+[app_proxy]
+url = "/apps/notyys"
+subpath = "notyys"
+prefix = "apps"
+
 [pos]
 embedded = false
