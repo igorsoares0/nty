@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigation, useOutletContext, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation, useOutletContext, useSearchParams, useFetcher } from "@remix-run/react";
 import {
   FormLayout,
   TextField,
@@ -62,6 +62,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const buttonBgColor = formData.get("buttonBgColor") as string;
   const buttonRadius = parseInt(formData.get("buttonRadius") as string);
 
+  console.log('🔧 [TEMPLATE SAVE] Dados recebidos:', {
+    type, subject, headline, buttonText, buttonColor, buttonBgColor
+  });
+
   try {
     await db.emailTemplate.upsert({
       where: { 
@@ -114,6 +118,8 @@ export default function EmailTemplateEditor() {
   const [buttonBgColor, setButtonBgColor] = useState(template.buttonBgColor);
   const [buttonRadius, setButtonRadius] = useState([template.buttonRadius]);
 
+  const fetcher = useFetcher<typeof loader>();
+
   const isSubmitting = navigation.state === "submitting";
 
   const typeOptions = [
@@ -123,9 +129,32 @@ export default function EmailTemplateEditor() {
   ];
 
   const handleTypeChange = (value: string) => {
+    console.log('🔄 [TEMPLATE CHANGE] Type changed to:', value);
     setSelectedType(value);
+    // Usar fetcher para carregar dados do novo template
+    fetcher.load(`/app/settings/templates/email?type=${value}`);
+    // Atualizar URL também
     setSearchParams({ type: value });
   };
+
+  // Atualizar campos quando fetcher retornar dados
+  useEffect(() => {
+    if (fetcher.data && fetcher.state === 'idle') {
+      const templateData = fetcher.data.template;
+      console.log('🔄 [TEMPLATE CHANGE] Fetcher data received:', templateData);
+      
+      // Atualizar todos os campos com os dados do novo template
+      setSubject(templateData.subject || '');
+      setHeadline(templateData.headline || '');
+      setBodyText(templateData.bodyText || '');
+      setButtonText(templateData.buttonText || '');
+      setButtonColor(templateData.buttonColor || '#ffffff');
+      setButtonBgColor(templateData.buttonBgColor || '#000000');
+      setButtonRadius([templateData.buttonRadius || 4]);
+      
+      console.log('🔄 [TEMPLATE CHANGE] All fields updated successfully');
+    }
+  }, [fetcher.data, fetcher.state]);
 
   // Generate email preview
   const emailPreview = `
