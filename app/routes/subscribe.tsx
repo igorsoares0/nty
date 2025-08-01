@@ -107,12 +107,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // Enviar email de agradecimento (não bloquear response se falhar)
       setTimeout(async () => {
         try {
+          // Extrair domínio completo da productUrl para buscar template correto
+          let fullShopDomain = shopDomain;
+          if (subscription.productUrl) {
+            try {
+              const url = new URL(subscription.productUrl);
+              fullShopDomain = url.hostname;
+              console.log(`🎯 [EMAIL] Using full shop domain for template:`, fullShopDomain);
+            } catch (urlError) {
+              console.log(`🎯 [EMAIL] Failed to extract domain, using shopDomain:`, shopDomain);
+            }
+          }
+          
           const emailSent = await sendThankYouEmail({
             email: subscription.email,
             productTitle: subscription.productTitle || 'Product',
             productUrl: subscription.productUrl || '',
-            shopId: subscription.shopId,
-            shopDomain: shopDomain,
+            shopId: fullShopDomain,
+            shopDomain: fullShopDomain,
           });
           
           if (emailSent) {
@@ -123,7 +135,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         } catch (emailError) {
           console.error(`🎯 [EMAIL] Error sending thank you email:`, emailError);
         }
-      }, 100); // Enviar após 100ms para não bloquear response
+      }, 100);
       
       return json({
         success: true,
@@ -157,7 +169,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
-// Loader para GET requests
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   console.log(`🎯 [SUBSCRIBE] GET request`);
   const url = new URL(request.url);

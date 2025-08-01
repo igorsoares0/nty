@@ -25,6 +25,8 @@ interface ThankYouEmailData {
 // Função para buscar template do banco
 const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
   try {
+    console.log('📧 [TEMPLATE] Searching for template:', { shopId, type });
+    
     let template = await db.emailTemplate.findUnique({
       where: {
         shopId_type: {
@@ -34,8 +36,20 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
       },
     });
 
+    console.log('📧 [TEMPLATE] Found template:', template ? 'YES' : 'NO');
+    
+    if (template) {
+      console.log('📧 [TEMPLATE] Template data:', {
+        subject: template.subject,
+        headline: template.headline,
+        buttonColor: template.buttonColor,
+        buttonBgColor: template.buttonBgColor,
+      });
+    }
+
     // Se não existe template, cria um padrão
     if (!template) {
+      console.log('📧 [TEMPLATE] Creating default template');
       template = await db.emailTemplate.create({
         data: {
           shopId,
@@ -53,7 +67,7 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
 
     return template;
   } catch (error) {
-    console.error('Error fetching email template:', error);
+    console.error('📧 [TEMPLATE] Error fetching email template:', error);
     // Retorna template padrão em caso de erro
     return {
       subject: 'Thank you for subscribing!',
@@ -70,6 +84,14 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
 // Função para gerar HTML do email
 const generateEmailHTML = (template: any, data: ThankYouEmailData) => {
   const { productTitle, productUrl, shopDomain } = data;
+  
+  console.log('📧 [HTML] Generating email with template:', {
+    subject: template.subject,
+    headline: template.headline,
+    buttonColor: template.buttonColor,
+    buttonBgColor: template.buttonBgColor,
+    buttonRadius: template.buttonRadius,
+  });
   
   return `
     <!DOCTYPE html>
