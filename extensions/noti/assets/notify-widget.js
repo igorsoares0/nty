@@ -24,6 +24,20 @@
       }
     }
     
+    isPhoneNumberEnabled() {
+      const value = this.appConfig?.phoneNumberEnabled;
+      this.log('🔍 [PHONE DEBUG] phoneNumberEnabled:', value, 'type:', typeof value);
+      
+      // Converte para boolean de forma robusta
+      if (typeof value === 'boolean') {
+        return value;
+      }
+      if (typeof value === 'string') {
+        return value.toLowerCase() === 'true';
+      }
+      return !!value;
+    }
+    
     async init() {
       try {
         this.log('Starting initialization...');
@@ -72,6 +86,7 @@
         // Primeiro, tenta usar configurações dos metafields (carregadas no liquid)
         if (window.notyysEmbedConfig?.widget) {
           this.log('Using config from metafields:', window.notyysEmbedConfig.widget);
+          this.log('🔍 [DEBUG] phoneNumberEnabled value:', window.notyysEmbedConfig.widget.phoneNumberEnabled, 'type:', typeof window.notyysEmbedConfig.widget.phoneNumberEnabled);
           this.appConfig = window.notyysEmbedConfig.widget;
           return;
         }
@@ -108,6 +123,7 @@
               const endpointConfig = await response.json();
               this.appConfig = endpointConfig;
               this.log('App config loaded successfully from endpoint:', url, this.appConfig);
+              this.log('🔍 [DEBUG] endpoint phoneNumberEnabled value:', endpointConfig.phoneNumberEnabled, 'type:', typeof endpointConfig.phoneNumberEnabled);
               configLoaded = true;
               break;
             } else {
@@ -397,7 +413,7 @@
                     <div id="notyys-email-error" class="notyys-error-text" style="display: none;"></div>
                   </div>
                   
-                  ${(this.appConfig.phoneNumberEnabled === true || this.appConfig.phoneNumberEnabled === 'true') ? `
+                  ${this.isPhoneNumberEnabled() ? `
                     <div class="notyys-input-group">
                       <label for="notyys-phone" class="notyys-label" style="
                         color: ${this.appConfig.formTextColor};

@@ -47,7 +47,7 @@ Só renderiza em páginas de produto fora de estoque
         formTitle: {{ form_config.formTitle | default: "Get notified when back in stock!" | json }},
         formDescription: {{ form_config.formDescription | default: "Enter your email to be notified when this item is available." | json }},
         formButtonText: {{ form_config.buttonText | default: "Subscribe" | json }},
-        phoneNumberEnabled: {{ form_config.phoneNumberEnabled | default: false }},
+        phoneNumberEnabled: {% if form_config.phoneNumberEnabled == true %}true{% else %}false{% endif %},
         formBgColor: {{ form_config.formBgColor | default: "#ffffff" | json }},
         formButtonColor: {{ form_config.buttonColor | default: "#000000" | json }},
         formTextColor: {{ form_config.textColor | default: "#333333" | json }},

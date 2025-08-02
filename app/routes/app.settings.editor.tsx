@@ -135,6 +135,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   
   const action = formData.get("_action") as string;
+  console.log('🔍 [ACTION] Form submitted with action:', action);
 
   try {
     if (action === "saveButton") {
@@ -193,7 +194,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const textColor = formData.get("textColor") as string;
 
       console.log('🔍 [SAVE FORM] Saving form buttonColor:', buttonColor);
-      const phoneNumberEnabled = formData.get("phoneNumberEnabled") === "on";
+      const rawPhoneValue = formData.get("phoneNumberEnabled");
+      const phoneNumberEnabled = rawPhoneValue === "true" || rawPhoneValue === "on";
+      console.log('🔍 [SAVE FORM] Saving phoneNumberEnabled:', phoneNumberEnabled, 'Raw value:', rawPhoneValue);
       const formTitle = formData.get("formTitle") as string;
       const formDescription = formData.get("formDescription") as string;
       const buttonText = formData.get("buttonText") as string;
@@ -671,7 +674,7 @@ export default function ButtonFormEditor() {
                     Form Editor
                   </Text>
                   
-                  <Form method="post">
+                  <Form method="post" onSubmit={() => console.log('🔍 [CLIENT] Form submitting with phoneNumberEnabled:', phoneNumberEnabled)}>
                     <FormLayout>
                       <input type="hidden" name="_action" value="saveForm" />
                       
@@ -702,9 +705,13 @@ export default function ButtonFormEditor() {
 
                       <Checkbox
                         label="Show phone number field"
-                        name="phoneNumberEnabled"
                         checked={phoneNumberEnabled}
                         onChange={setPhoneNumberEnabled}
+                      />
+                      <input 
+                        type="hidden" 
+                        name="phoneNumberEnabled" 
+                        value={phoneNumberEnabled ? "true" : "false"} 
                       />
 
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
