@@ -14,6 +14,8 @@ import {
   ColorPicker,
   RangeSlider,
   Divider,
+  Popover,
+  InlineStack,
 } from "@shopify/polaris";
 import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
@@ -117,6 +119,10 @@ export default function EmailTemplateEditor() {
   const [buttonColor, setButtonColor] = useState(template.buttonColor);
   const [buttonBgColor, setButtonBgColor] = useState(template.buttonBgColor);
   const [buttonRadius, setButtonRadius] = useState([template.buttonRadius]);
+  
+  // Estados para controlar os color pickers
+  const [showButtonColorPicker, setShowButtonColorPicker] = useState(false);
+  const [showButtonBgColorPicker, setShowButtonBgColorPicker] = useState(false);
 
   const fetcher = useFetcher<typeof loader>();
 
@@ -135,6 +141,89 @@ export default function EmailTemplateEditor() {
     fetcher.load(`/app/settings/templates/email?type=${value}`);
     // Atualizar URL também
     setSearchParams({ type: value });
+  };
+
+  // Funções para lidar com mudanças de cor
+  const handleButtonColorChange = (color: string) => {
+    setButtonColor(color);
+  };
+
+  const handleButtonBgColorChange = (color: string) => {
+    setButtonBgColor(color);
+  };
+
+  // Função para validar e formatar cor hexadecimal
+  const formatHexColor = (color: string) => {
+    if (!color.startsWith('#')) {
+      color = '#' + color;
+    }
+    return color.length === 7 ? color : '#000000';
+  };
+
+  // Função para converter hex para HSB para o ColorPicker
+  const hexToHsb = (hex: string) => {
+    // Garantir que o hex é válido
+    if (!hex || hex.length !== 7 || !hex.startsWith('#')) {
+      return { hue: 0, saturation: 0, brightness: 1 };
+    }
+
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+
+    let hue = 0;
+    if (diff !== 0) {
+      if (max === r) hue = ((g - b) / diff) % 6;
+      else if (max === g) hue = (b - r) / diff + 2;
+      else hue = (r - g) / diff + 4;
+    }
+    hue = hue * 60;
+    if (hue < 0) hue += 360;
+
+    const saturation = max === 0 ? 0 : diff / max;
+    const brightness = max;
+
+    return {
+      hue: Math.max(0, Math.min(360, hue)), // Retornar em graus para o ColorPicker do Polaris
+      saturation: Math.max(0, Math.min(1, saturation)),
+      brightness: Math.max(0, Math.min(1, brightness)),
+    };
+  };
+
+  // Função para converter HSB para hex
+  const hsbToHex = (hsb: {hue: number, saturation: number, brightness: number}) => {
+    let { hue, saturation, brightness } = hsb;
+    
+    // O ColorPicker do Polaris retorna hue em graus (0-360), normalizar para 0-1
+    if (hue > 1) {
+      hue = hue / 360;
+    }
+    
+    const h = hue * 360;
+    const s = saturation;
+    const v = brightness;
+
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+
+    let r = 0, g = 0, b = 0;
+    if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+    else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+    else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+    else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+    else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+    else if (h >= 300 && h < 360) { r = c; g = 0; b = x; }
+
+    r = Math.max(0, Math.min(255, Math.round((r + m) * 255)));
+    g = Math.max(0, Math.min(255, Math.round((g + m) * 255)));
+    b = Math.max(0, Math.min(255, Math.round((b + m) * 255)));
+
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   };
 
   // Atualizar campos quando fetcher retornar dados
@@ -289,42 +378,108 @@ export default function EmailTemplateEditor() {
               />
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                {/* Button Text Color */}
                 <div>
-                  <Text variant="bodyMd" as="label" htmlFor="buttonColor">
+                  <Text variant="bodyMd" as="label">
                     Button Text Color
                   </Text>
-                  <input
-                    type="color"
-                    name="buttonColor"
-                    value={buttonColor}
-                    onChange={(e) => setButtonColor(e.target.value)}
-                    style={{ 
-                      width: "100%", 
-                      height: "40px", 
-                      border: "1px solid #ccc", 
-                      borderRadius: "4px",
-                      marginTop: "4px",
-                    }}
-                  />
+                  <div style={{ marginTop: "8px" }}>
+                    <InlineStack gap="300" align="start">
+                      <Popover
+                        active={showButtonColorPicker}
+                        activator={
+                          <div
+                            onClick={() => setShowButtonColorPicker(!showButtonColorPicker)}
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              backgroundColor: buttonColor,
+                              border: "1px solid #c9cccf",
+                              borderRadius: "4px",
+                              cursor: "pointer",
+                              flexShrink: 0,
+                            }}
+                          />
+                        }
+                        onClose={() => setShowButtonColorPicker(false)}
+                      >
+                        <div style={{ padding: "16px", width: "200px" }}>
+                          <ColorPicker
+                            color={(() => {
+                              const hsb = hexToHsb(buttonColor);
+                              console.log('🎨 Initial hex to HSB:', buttonColor, '→', hsb);
+                              return hsb;
+                            })()}
+                            onChange={(color) => {
+                              console.log('🎨 ColorPicker onChange:', color);
+                              const hex = hsbToHex(color);
+                              console.log('🎨 Converted to hex:', hex);
+                              handleButtonColorChange(hex);
+                            }}
+                            allowAlpha={false}
+                          />
+                        </div>
+                      </Popover>
+                      <div style={{ flex: 1 }}>
+                        <TextField
+                          value={buttonColor}
+                          onChange={(value) => handleButtonColorChange(formatHexColor(value))}
+                          placeholder="#ffffff"
+                          autoComplete="off"
+                        />
+                      </div>
+                    </InlineStack>
+                    <input type="hidden" name="buttonColor" value={buttonColor} />
+                  </div>
                 </div>
                 
+                {/* Button Background Color */}
                 <div>
-                  <Text variant="bodyMd" as="label" htmlFor="buttonBgColor">
+                  <Text variant="bodyMd" as="label">
                     Button Background Color
                   </Text>
-                  <input
-                    type="color"
-                    name="buttonBgColor"
-                    value={buttonBgColor}
-                    onChange={(e) => setButtonBgColor(e.target.value)}
-                    style={{ 
-                      width: "100%", 
-                      height: "40px", 
-                      border: "1px solid #ccc", 
-                      borderRadius: "4px",
-                      marginTop: "4px",
-                    }}
-                  />
+                  <div style={{ marginTop: "8px" }}>
+                    <InlineStack gap="300" align="start">
+                      <Popover
+                        active={showButtonBgColorPicker}
+                        activator={
+                          <div
+                            onClick={() => setShowButtonBgColorPicker(!showButtonBgColorPicker)}
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              backgroundColor: buttonBgColor,
+                              border: "1px solid #c9cccf",
+                              borderRadius: "4px",
+                              cursor: "pointer",
+                              flexShrink: 0,
+                            }}
+                          />
+                        }
+                        onClose={() => setShowButtonBgColorPicker(false)}
+                      >
+                        <div style={{ padding: "16px", width: "200px" }}>
+                          <ColorPicker
+                            color={hexToHsb(buttonBgColor)}
+                            onChange={(color) => {
+                              const hex = hsbToHex(color);
+                              handleButtonBgColorChange(hex);
+                            }}
+                            allowAlpha={false}
+                          />
+                        </div>
+                      </Popover>
+                      <div style={{ flex: 1 }}>
+                        <TextField
+                          value={buttonBgColor}
+                          onChange={(value) => handleButtonBgColorChange(formatHexColor(value))}
+                          placeholder="#000000"
+                          autoComplete="off"
+                        />
+                      </div>
+                    </InlineStack>
+                    <input type="hidden" name="buttonBgColor" value={buttonBgColor} />
+                  </div>
                 </div>
               </div>
 
