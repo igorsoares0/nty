@@ -142,6 +142,7 @@
         formButtonText: "Subscribe",
         phoneNumberEnabled: false,
         formBgColor: "#ffffff",
+        formButtonColor: "#000000",
         formTextColor: "#333333",
         buttonBorderRadius: 4,
         formTextSize: 14
@@ -396,7 +397,7 @@
                     <div id="notyys-email-error" class="notyys-error-text" style="display: none;"></div>
                   </div>
                   
-                  ${this.appConfig.phoneNumberEnabled ? `
+                  ${(this.appConfig.phoneNumberEnabled === true || this.appConfig.phoneNumberEnabled === 'true') ? `
                     <div class="notyys-input-group">
                       <label for="notyys-phone" class="notyys-label" style="
                         color: ${this.appConfig.formTextColor};
@@ -419,7 +420,7 @@
                     class="notyys-submit-btn" 
                     id="notyys-submit-btn"
                     style="
-                      background-color: ${this.appConfig.buttonColor};
+                      background-color: ${this.appConfig.formButtonColor || this.appConfig.buttonColor};
                       border-radius: ${this.appConfig.buttonBorderRadius}px;
                       font-size: ${this.appConfig.formTextSize + 2}px;
                     "

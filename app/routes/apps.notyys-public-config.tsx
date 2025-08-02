@@ -1,6 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -87,6 +86,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       formButtonText: formSettings?.buttonText || "Subscribe",
       phoneNumberEnabled: formSettings?.phoneNumberEnabled || false,
       formBgColor: formSettings?.formBgColor || "#ffffff",
+      formButtonColor: formSettings?.buttonColor || "#000000",
       formTextColor: formSettings?.textColor || "#333333",
       buttonBorderRadius: formSettings?.buttonBorderRadius || 4,
       formTextSize: formSettings?.textSize || 14,
