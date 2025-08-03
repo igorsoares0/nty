@@ -12,7 +12,7 @@ import {
   BlockStack,
   Text,
   RangeSlider,
-  Divider,
+  Grid,
 } from "@shopify/polaris";
 import { useState } from "react";
 import { authenticate } from "../shopify.server";
@@ -151,70 +151,87 @@ export default function ButtonEditor() {
         )}
 
         <Layout.Section>
-          <Card sectioned>
-            <BlockStack gap="500">
-              <Text variant="headingMd" as="h2">
-                Button Settings
-              </Text>
-              
-              <Form method="post">
-                <FormLayout>
-                  <TextField
-                    label="Button Text"
-                    name="textContent"
-                    value={textContent}
-                    onChange={setTextContent}
-                    requiredIndicator
-                  />
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    <ColorPickerField
-                      label="Background Color"
-                      value={backgroundColor}
-                      onChange={setBackgroundColor}
-                      name="backgroundColor"
-                      placeholder="#000000"
-                    />
-                    
-                    <ColorPickerField
-                      label="Text Color"
-                      value={textColor}
-                      onChange={setTextColor}
-                      name="textColor"
-                      placeholder="#ffffff"
-                    />
-                  </div>
-
-                  <div>
-                    <Text variant="bodyMd" as="label">
-                      Border Radius: {borderRadius[0]}px
-                    </Text>
-                    <input type="hidden" name="borderRadius" value={borderRadius[0]} />
-                    <RangeSlider
-                      label=""
-                      value={borderRadius[0]}
-                      onChange={(value) => setBorderRadius([value])}
-                      min={0}
-                      max={20}
-                    />
-                  </div>
-
-                  <div>
-                    <Text variant="bodyMd" as="label">
-                      Text Size: {textSize[0]}px
-                    </Text>
-                    <input type="hidden" name="textSize" value={textSize[0]} />
-                    <RangeSlider
-                      label=""
-                      value={textSize[0]}
-                      onChange={(value) => setTextSize([value])}
-                      min={12}
-                      max={24}
-                    />
-                  </div>
-
-                  <Divider />
+          <Grid>
+            <Grid.Cell columnSpan={{xs: 12, sm: 12, md: 7, lg: 7, xl: 7}}>
+              <Card sectioned>
+                <BlockStack gap="500">
+                  <Text variant="headingMd" as="h2">
+                    Button Settings
+                  </Text>
                   
+                  <Form method="post">
+                    <FormLayout>
+                      <TextField
+                        label="Button Text"
+                        name="textContent"
+                        value={textContent}
+                        onChange={setTextContent}
+                        requiredIndicator
+                      />
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                        <ColorPickerField
+                          label="Background Color"
+                          value={backgroundColor}
+                          onChange={setBackgroundColor}
+                          name="backgroundColor"
+                          placeholder="#000000"
+                        />
+                        
+                        <ColorPickerField
+                          label="Text Color"
+                          value={textColor}
+                          onChange={setTextColor}
+                          name="textColor"
+                          placeholder="#ffffff"
+                        />
+                      </div>
+
+                      <div>
+                        <Text variant="bodyMd" as="label">
+                          Border Radius: {borderRadius[0]}px
+                        </Text>
+                        <input type="hidden" name="borderRadius" value={borderRadius[0]} />
+                        <RangeSlider
+                          label=""
+                          value={borderRadius[0]}
+                          onChange={(value) => setBorderRadius([value])}
+                          min={0}
+                          max={20}
+                        />
+                      </div>
+
+                      <div>
+                        <Text variant="bodyMd" as="label">
+                          Text Size: {textSize[0]}px
+                        </Text>
+                        <input type="hidden" name="textSize" value={textSize[0]} />
+                        <RangeSlider
+                          label=""
+                          value={textSize[0]}
+                          onChange={(value) => setTextSize([value])}
+                          min={12}
+                          max={24}
+                        />
+                      </div>
+
+                      <Button
+                        submit
+                        variant="primary"
+                        loading={isSubmitting}
+                        size="large"
+                      >
+                        Save Button Settings
+                      </Button>
+                    </FormLayout>
+                  </Form>
+                </BlockStack>
+              </Card>
+            </Grid.Cell>
+
+            <Grid.Cell columnSpan={{xs: 12, sm: 12, md: 5, lg: 5, xl: 5}}>
+              <div style={{ position: "sticky", top: "1rem" }}>
+                <Card sectioned>
                   <BlockStack gap="300">
                     <Text variant="headingMd" as="h3">
                       Live Preview
@@ -227,19 +244,10 @@ export default function ButtonEditor() {
                       textContent={textContent}
                     />
                   </BlockStack>
-
-                  <Button
-                    submit
-                    variant="primary"
-                    loading={isSubmitting}
-                    size="large"
-                  >
-                    Save Button Settings
-                  </Button>
-                </FormLayout>
-              </Form>
-            </BlockStack>
-          </Card>
+                </Card>
+              </div>
+            </Grid.Cell>
+          </Grid>
         </Layout.Section>
       </Layout>
     </Page>

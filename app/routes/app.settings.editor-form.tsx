@@ -13,7 +13,7 @@ import {
   Text,
   RangeSlider,
   Checkbox,
-  Divider,
+  Grid,
 } from "@shopify/polaris";
 import { useState } from "react";
 import { authenticate } from "../shopify.server";
@@ -178,106 +178,123 @@ export default function FormEditor() {
         )}
 
         <Layout.Section>
-          <Card sectioned>
-            <BlockStack gap="500">
-              <Text variant="headingMd" as="h2">
-                Form Settings
-              </Text>
-              
-              <Form method="post">
-                <FormLayout>
-                  <TextField
-                    label="Form Title"
-                    name="formTitle"
-                    value={formTitle}
-                    onChange={setFormTitle}
-                    requiredIndicator
-                  />
-
-                  <TextField
-                    label="Form Description"
-                    name="formDescription"
-                    value={formDescription}
-                    onChange={setFormDescription}
-                    multiline={2}
-                    requiredIndicator
-                  />
-
-                  <TextField
-                    label="Submit Button Text"
-                    name="buttonText"
-                    value={formButtonText}
-                    onChange={setFormButtonText}
-                    requiredIndicator
-                  />
-
-                  <Checkbox
-                    label="Show phone number field"
-                    checked={phoneNumberEnabled}
-                    onChange={setPhoneNumberEnabled}
-                  />
-                  <input 
-                    type="hidden" 
-                    name="phoneNumberEnabled" 
-                    value={phoneNumberEnabled ? "true" : "false"} 
-                  />
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-                    <ColorPickerField
-                      label="Form Background"
-                      value={formBgColor}
-                      onChange={setFormBgColor}
-                      name="formBgColor"
-                      placeholder="#ffffff"
-                    />
-                    
-                    <ColorPickerField
-                      label="Button Color"
-                      value={formButtonColor}
-                      onChange={setFormButtonColor}
-                      name="buttonColor"
-                      placeholder="#000000"
-                    />
-
-                    <ColorPickerField
-                      label="Text Color"
-                      value={formTextColor}
-                      onChange={setFormTextColor}
-                      name="textColor"
-                      placeholder="#333333"
-                    />
-                  </div>
-
-                  <div>
-                    <Text variant="bodyMd" as="label">
-                      Button Border Radius: {buttonBorderRadius[0]}px
-                    </Text>
-                    <input type="hidden" name="buttonBorderRadius" value={buttonBorderRadius[0]} />
-                    <RangeSlider
-                      label=""
-                      value={buttonBorderRadius[0]}
-                      onChange={(value) => setButtonBorderRadius([value])}
-                      min={0}
-                      max={20}
-                    />
-                  </div>
-
-                  <div>
-                    <Text variant="bodyMd" as="label">
-                      Text Size: {formTextSize[0]}px
-                    </Text>
-                    <input type="hidden" name="textSize" value={formTextSize[0]} />
-                    <RangeSlider
-                      label=""
-                      value={formTextSize[0]}
-                      onChange={(value) => setFormTextSize([value])}
-                      min={12}
-                      max={18}
-                    />
-                  </div>
-
-                  <Divider />
+          <Grid>
+            <Grid.Cell columnSpan={{xs: 12, sm: 12, md: 7, lg: 7, xl: 7}}>
+              <Card sectioned>
+                <BlockStack gap="500">
+                  <Text variant="headingMd" as="h2">
+                    Form Settings
+                  </Text>
                   
+                  <Form method="post">
+                    <FormLayout>
+                      <TextField
+                        label="Form Title"
+                        name="formTitle"
+                        value={formTitle}
+                        onChange={setFormTitle}
+                        requiredIndicator
+                      />
+
+                      <TextField
+                        label="Form Description"
+                        name="formDescription"
+                        value={formDescription}
+                        onChange={setFormDescription}
+                        multiline={2}
+                        requiredIndicator
+                      />
+
+                      <TextField
+                        label="Submit Button Text"
+                        name="buttonText"
+                        value={formButtonText}
+                        onChange={setFormButtonText}
+                        requiredIndicator
+                      />
+
+                      <Checkbox
+                        label="Show phone number field"
+                        checked={phoneNumberEnabled}
+                        onChange={setPhoneNumberEnabled}
+                      />
+                      <input 
+                        type="hidden" 
+                        name="phoneNumberEnabled" 
+                        value={phoneNumberEnabled ? "true" : "false"} 
+                      />
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                        <ColorPickerField
+                          label="Form Background"
+                          value={formBgColor}
+                          onChange={setFormBgColor}
+                          name="formBgColor"
+                          placeholder="#ffffff"
+                        />
+                        
+                        <ColorPickerField
+                          label="Button Color"
+                          value={formButtonColor}
+                          onChange={setFormButtonColor}
+                          name="buttonColor"
+                          placeholder="#000000"
+                        />
+
+                        <ColorPickerField
+                          label="Text Color"
+                          value={formTextColor}
+                          onChange={setFormTextColor}
+                          name="textColor"
+                          placeholder="#333333"
+                        />
+                      </div>
+
+                      <div>
+                        <Text variant="bodyMd" as="label">
+                          Button Border Radius: {buttonBorderRadius[0]}px
+                        </Text>
+                        <input type="hidden" name="buttonBorderRadius" value={buttonBorderRadius[0]} />
+                        <RangeSlider
+                          label=""
+                          value={buttonBorderRadius[0]}
+                          onChange={(value) => setButtonBorderRadius([value])}
+                          min={0}
+                          max={20}
+                        />
+                      </div>
+
+                      <div>
+                        <Text variant="bodyMd" as="label">
+                          Text Size: {formTextSize[0]}px
+                        </Text>
+                        <input type="hidden" name="textSize" value={formTextSize[0]} />
+                        <RangeSlider
+                          label=""
+                          value={formTextSize[0]}
+                          onChange={(value) => setFormTextSize([value])}
+                          min={12}
+                          max={18}
+                        />
+                      </div>
+
+                      <Button
+                        submit
+                        variant="primary"
+                        loading={isSubmitting}
+                        size="large"
+                      >
+                        Save Form Settings
+                      </Button>
+                    </FormLayout>
+                  </Form>
+                </BlockStack>
+              </Card>
+            </Grid.Cell>
+
+            <Grid.Cell columnSpan={{xs: 12, sm: 12, md: 5, lg: 5, xl: 5}}>
+              <div style={{ position: "sticky", top: "1rem" }}>
+                <Card sectioned>
                   <BlockStack gap="300">
                     <Text variant="headingMd" as="h3">
                       Live Preview
@@ -294,19 +311,10 @@ export default function FormEditor() {
                       formButtonText={formButtonText}
                     />
                   </BlockStack>
-
-                  <Button
-                    submit
-                    variant="primary"
-                    loading={isSubmitting}
-                    size="large"
-                  >
-                    Save Form Settings
-                  </Button>
-                </FormLayout>
-              </Form>
-            </BlockStack>
-          </Card>
+                </Card>
+              </div>
+            </Grid.Cell>
+          </Grid>
         </Layout.Section>
       </Layout>
     </Page>
