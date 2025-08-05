@@ -75,11 +75,11 @@ export default function GeneralSettings() {
 
   const isSubmitting = navigation.state === "submitting";
 
+  // Sincronizar estado local com dados do servidor após mudanças
   useEffect(() => {
-    if (actionData?.success) {
-      // Reset form state on successful save
-    }
-  }, [actionData]);
+    setOwnerEmail(settings.ownerEmail || "");
+    setAutoNotificationEnabled(settings.autoNotificationEnabled);
+  }, [settings.ownerEmail, settings.autoNotificationEnabled]);
 
   return (
     <BlockStack gap="500">

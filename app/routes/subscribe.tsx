@@ -37,9 +37,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }, { status: 400 });
     }
     
-    // Converte shopId para string
-    const shopDomain = shopId.toString().replace(/^gid:\/\/shopify\/Shop\//, '');
-    console.log(`🎯 [SUBSCRIBE] Shop domain:`, shopDomain);
+    // Usar shop domain do header para consistência com outras rotas
+    const shopDomain = request.headers.get('x-forwarded-host') || 'unknown';
+    console.log(`🎯 [SUBSCRIBE] Shop domain from header:`, shopDomain);
+    console.log(`🎯 [SUBSCRIBE] Original shopId from payload:`, shopId);
     
     // Verifica se já existe inscrição
     let existingSubscription = null;

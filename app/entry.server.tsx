@@ -7,6 +7,10 @@ import {
 } from "@remix-run/node";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./shopify.server";
+import { startBackgroundWorker } from "./utils/background-worker.server";
+
+// Inicializar background worker para processar queue de notificações
+startBackgroundWorker();
 
 export const streamTimeout = 5000;
 

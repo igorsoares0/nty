@@ -11,7 +11,7 @@ import {
   InlineStack,
   Card,
 } from "@shopify/polaris";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
@@ -74,6 +74,12 @@ export default function ReminderNotificationSettings() {
   const [reminderSmsEnabled, setReminderSmsEnabled] = useState(settings.reminderSmsEnabled);
 
   const isSubmitting = navigation.state === "submitting";
+
+  // Sincronizar estado local com dados do servidor após mudanças
+  useEffect(() => {
+    setReminderEmailEnabled(settings.reminderEmailEnabled);
+    setReminderSmsEnabled(settings.reminderSmsEnabled);
+  }, [settings.reminderEmailEnabled, settings.reminderSmsEnabled]);
 
   return (
     <BlockStack gap="500">

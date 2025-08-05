@@ -23,17 +23,28 @@ type NotificationsContext = {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   
+  console.log('🔍 [FIRST] Loading settings for shop:', session.shop);
+  
   let settings = await db.settings.findUnique({
     where: { shopId: session.shop },
   });
 
+  console.log('🔍 [FIRST] Found settings:', settings ? 'YES' : 'NO');
+  
   if (!settings) {
+    console.log('🔍 [FIRST] Creating default settings');
     settings = await db.settings.create({
       data: {
         shopId: session.shop,
       },
     });
   }
+
+  console.log('🔍 [FIRST] Settings data:', {
+    firstEmailEnabled: settings.firstEmailEnabled,
+    firstSmsEnabled: settings.firstSmsEnabled,
+    autoNotificationEnabled: settings.autoNotificationEnabled
+  });
 
   return json({ settings });
 };
@@ -42,11 +53,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const formData = await request.formData();
   
-  const firstEmailEnabled = formData.get("firstEmailEnabled") === "on";
-  const firstSmsEnabled = formData.get("firstSmsEnabled") === "on";
+  const firstEmailEnabled = formData.get("firstEmailEnabled") === "true";
+  const firstSmsEnabled = formData.get("firstSmsEnabled") === "true";
+
+  console.log('💾 [FIRST] Saving settings:', {
+    shop: session.shop,
+    firstEmailEnabled,
+    firstSmsEnabled,
+    formData: Object.fromEntries(formData.entries())
+  });
 
   try {
-    await db.settings.upsert({
+    const updatedSettings = await db.settings.upsert({
       where: { shopId: session.shop },
       update: {
         firstEmailEnabled,
@@ -59,8 +77,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       },
     });
 
+    console.log('💾 [FIRST] Settings saved successfully:', {
+      firstEmailEnabled: updatedSettings.firstEmailEnabled,
+      firstSmsEnabled: updatedSettings.firstSmsEnabled
+    });
+
     return json({ success: true, message: "First notification settings saved successfully!" });
   } catch (error) {
+    console.error('💾 [FIRST] Error saving settings:', error);
     return json({ success: false, message: "Failed to save settings. Please try again." }, { status: 400 });
   }
 };
@@ -75,6 +99,12 @@ export default function FirstNotificationSettings() {
   const [firstSmsEnabled, setFirstSmsEnabled] = useState(settings.firstSmsEnabled);
 
   const isSubmitting = navigation.state === "submitting";
+
+  // Sincronizar estado local com dados do servidor após mudanças
+  useEffect(() => {
+    setFirstEmailEnabled(settings.firstEmailEnabled);
+    setFirstSmsEnabled(settings.firstSmsEnabled);
+  }, [settings.firstEmailEnabled, settings.firstSmsEnabled]);
 
   return (
     <BlockStack gap="500">
@@ -106,10 +136,14 @@ export default function FirstNotificationSettings() {
               
               <Checkbox
                 label="Send email notification"
-                name="firstEmailEnabled"
                 checked={firstEmailEnabled}
                 onChange={setFirstEmailEnabled}
                 helpText="Customers will receive an email confirmation that they've been added to the notification list."
+              />
+              <input 
+                type="hidden" 
+                name="firstEmailEnabled" 
+                value={firstEmailEnabled ? "true" : "false"} 
               />
 
               {firstEmailEnabled && (
@@ -139,10 +173,14 @@ export default function FirstNotificationSettings() {
               
               <Checkbox
                 label="Send SMS notification"
-                name="firstSmsEnabled"
                 checked={firstSmsEnabled}
                 onChange={setFirstSmsEnabled}
                 helpText="Customers will receive an SMS confirmation (requires phone number collection)."
+              />
+              <input 
+                type="hidden" 
+                name="firstSmsEnabled" 
+                value={firstSmsEnabled ? "true" : "false"} 
               />
 
               {firstSmsEnabled && (

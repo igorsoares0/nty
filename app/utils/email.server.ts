@@ -22,6 +22,15 @@ interface ThankYouEmailData {
   shopDomain?: string;
 }
 
+// Interface para first notification email
+interface FirstNotificationEmailData {
+  email: string;
+  productTitle: string;
+  productUrl: string;
+  shopId: string;
+  shopDomain?: string;
+}
+
 // Função para buscar template do banco
 const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
   try {
@@ -50,10 +59,20 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
     // Se não existe template, cria um padrão
     if (!template) {
       console.log('📧 [TEMPLATE] Creating default template');
-      template = await db.emailTemplate.create({
-        data: {
-          shopId,
-          type,
+      
+      let defaultData;
+      if (type === 'first') {
+        defaultData = {
+          subject: 'Great News! Your Product is Back in Stock!',
+          headline: 'It\'s Back! 🎉',
+          bodyText: 'Great news! The product you requested is now back in stock and ready for you to purchase.',
+          buttonText: 'Shop Now',
+          buttonColor: '#ffffff',
+          buttonBgColor: '#000000',
+          buttonRadius: 4,
+        };
+      } else {
+        defaultData = {
           subject: 'Thank you for subscribing!',
           headline: 'Thank You!',
           bodyText: 'Thank you for subscribing to back-in-stock notifications for this product. We\'ll notify you as soon as it\'s available again.',
@@ -61,6 +80,14 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
           buttonColor: '#ffffff',
           buttonBgColor: '#000000',
           buttonRadius: 4,
+        };
+      }
+      
+      template = await db.emailTemplate.create({
+        data: {
+          shopId,
+          type,
+          ...defaultData,
         },
       });
     }
@@ -69,20 +96,32 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
   } catch (error) {
     console.error('📧 [TEMPLATE] Error fetching email template:', error);
     // Retorna template padrão em caso de erro
-    return {
-      subject: 'Thank you for subscribing!',
-      headline: 'Thank You!',
-      bodyText: 'Thank you for subscribing to back-in-stock notifications for this product. We\'ll notify you as soon as it\'s available again.',
-      buttonText: 'Visit Store',
-      buttonColor: '#ffffff',
-      buttonBgColor: '#000000',
-      buttonRadius: 4,
-    };
+    if (type === 'first') {
+      return {
+        subject: 'Great News! Your Product is Back in Stock!',
+        headline: 'It\'s Back! 🎉',
+        bodyText: 'Great news! The product you requested is now back in stock and ready for you to purchase.',
+        buttonText: 'Shop Now',
+        buttonColor: '#ffffff',
+        buttonBgColor: '#000000',
+        buttonRadius: 4,
+      };
+    } else {
+      return {
+        subject: 'Thank you for subscribing!',
+        headline: 'Thank You!',
+        bodyText: 'Thank you for subscribing to back-in-stock notifications for this product. We\'ll notify you as soon as it\'s available again.',
+        buttonText: 'Visit Store',
+        buttonColor: '#ffffff',
+        buttonBgColor: '#000000',
+        buttonRadius: 4,
+      };
+    }
   }
 };
 
 // Função para gerar HTML do email
-const generateEmailHTML = (template: any, data: ThankYouEmailData) => {
+const generateEmailHTML = (template: any, data: ThankYouEmailData | FirstNotificationEmailData, emailType: string = 'thankyou') => {
   const { productTitle, productUrl, shopDomain } = data;
   
   console.log('📧 [HTML] Generating email with template:', {
@@ -114,12 +153,18 @@ const generateEmailHTML = (template: any, data: ThankYouEmailData) => {
         <!-- Body -->
         <div style="margin-bottom: 30px;">
           <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-            ${template.bodyText.replace('this product', `<strong>${productTitle}</strong>`)}
+            ${template.bodyText.replace('this product', `<strong>${productTitle}</strong>`).replace('The product you requested', `<strong>${productTitle}</strong>`)}
           </p>
           
+          ${emailType === 'first' ? `
+          <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+            <strong>${productTitle}</strong> is now available and ready for purchase. Don't miss out - get yours today!
+          </p>
+          ` : `
           <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
             You'll receive an email notification as soon as <strong>${productTitle}</strong> is back in stock.
           </p>
+          `}
         </div>
         
         <!-- Button -->
@@ -174,7 +219,7 @@ export const sendThankYouEmail = async (data: ThankYouEmailData): Promise<boolea
     const template = await getEmailTemplate(data.shopId, 'thankyou');
     
     // Gera HTML do email
-    const htmlContent = generateEmailHTML(template, data);
+    const htmlContent = generateEmailHTML(template, data, 'thankyou');
     
     // Configura transportador
     const transporter = createTransporter();
@@ -214,6 +259,59 @@ export const sendThankYouEmail = async (data: ThankYouEmailData): Promise<boolea
     
   } catch (error) {
     console.error('📧 Error sending thank you email:', error);
+    return false;
+  }
+};
+
+// Função principal para enviar first notification email
+export const sendFirstNotificationEmail = async (data: FirstNotificationEmailData): Promise<boolean> => {
+  try {
+    console.log('🎉 [FIRST] Sending first notification email to:', data.email);
+    
+    // Busca template personalizado para 'first'
+    const template = await getEmailTemplate(data.shopId, 'first');
+    
+    // Gera HTML do email
+    const htmlContent = generateEmailHTML(template, data, 'first');
+    
+    // Configura transportador
+    const transporter = createTransporter();
+    
+    // Configura opções do email
+    const mailOptions = {
+      from: {
+        name: process.env.EMAIL_FROM_NAME || 'Back in Stock Notifications',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@notyys.app',
+      },
+      to: data.email,
+      subject: template.subject,
+      html: htmlContent,
+      text: `
+        ${template.headline}
+        
+        ${template.bodyText.replace('The product you requested', data.productTitle)}
+        
+        ${data.productTitle} is now available and ready for purchase. Don't miss out - get yours today!
+        
+        Shop now: ${data.productUrl}
+        
+        This email was sent by ${data.shopDomain || 'Notyys'}.
+      `.trim(),
+    };
+    
+    // Envia o email
+    const result = await transporter.sendMail(mailOptions);
+    
+    console.log('🎉 [FIRST] First notification email sent successfully:', {
+      messageId: result.messageId,
+      to: data.email,
+      product: data.productTitle,
+    });
+    
+    return true;
+    
+  } catch (error) {
+    console.error('🎉 [FIRST] Error sending first notification email:', error);
     return false;
   }
 };
