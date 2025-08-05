@@ -3,7 +3,7 @@
 client_id = "6cdca756a3dcc2f7e886b190a95c33e1"
 name = "notyyss"
 handle = "notyyss"
-application_url = "https://lessons-simulations-architecture-ashley.trycloudflare.com"
+application_url = "https://groundwater-parade-his-fees.trycloudflare.com"
 embedded = true
 
 [build]
@@ -18,7 +18,7 @@ api_version = "2025-07"
 scopes = "write_products"
 
 [auth]
-redirect_urls = ["https://lessons-simulations-architecture-ashley.trycloudflare.com/auth/callback", "https://lessons-simulations-architecture-ashley.trycloudflare.com/auth/shopify/callback", "https://lessons-simulations-architecture-ashley.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://groundwater-parade-his-fees.trycloudflare.com/auth/callback", "https://groundwater-parade-his-fees.trycloudflare.com/auth/shopify/callback", "https://groundwater-parade-his-fees.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
