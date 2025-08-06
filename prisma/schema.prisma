@@ -48,6 +48,8 @@ model Settings {
   // Reminder settings  
   reminderEmailEnabled  Boolean @default(false)
   reminderSmsEnabled    Boolean @default(false)
+  reminderDelayHours    Float   @default(24.0)
+  reminderMaxCount      Int     @default(2)
   
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -146,6 +148,11 @@ model Subscription {
   notifiedAt        DateTime?
   reactivatedAt     DateTime?
   reactivationCount Int      @default(0)
+  
+  // Reminder tracking
+  reminderCount     Int      @default(0)
+  lastReminderAt    DateTime?
+  purchaseDetectedAt DateTime?
   
   // Tracking data
   userAgent         String?

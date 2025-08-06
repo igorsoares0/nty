@@ -1,10 +1,10 @@
 import db from '../db.server';
-import { sendFirstNotificationEmail } from './email.server';
+import { sendFirstNotificationEmail, sendReminderNotificationEmail } from './email.server';
 
 // Interface para dados da queue
 interface QueueJobData {
   subscriptionId: string;
-  type: 'first_notification' | 'reminder' | 'thankyou';
+  type: 'first_notification' | 'thankyou_notification' | 'reminder_email' | 'reminder_sms';
   scheduledFor: Date;
   data: any;
 }
@@ -102,10 +102,20 @@ const processQueueJob = async (job: any): Promise<void> => {
       return;
     }
 
-    if (subscription.status !== 'active') {
-      console.log('⚡ [QUEUE] Subscription not active:', subscription.status);
-      await markJobAsCompleted(job.id);
-      return;
+    // Para reminders, aceitar subscriptions 'notified' (que já receberam back-in-stock)
+    // Para outras notificações, só processar se 'active'
+    if (job.type === 'reminder_email' || job.type === 'reminder_sms') {
+      if (subscription.status === 'cancelled') {
+        console.log('⚡ [QUEUE] Subscription cancelled, skipping reminder:', subscription.status);
+        await markJobAsCompleted(job.id);
+        return;
+      }
+    } else {
+      if (subscription.status !== 'active') {
+        console.log('⚡ [QUEUE] Subscription not active:', subscription.status);
+        await markJobAsCompleted(job.id);
+        return;
+      }
     }
 
     // Parse job data
@@ -123,6 +133,78 @@ const processQueueJob = async (job: any): Promise<void> => {
           shopId: subscription.shopId,
           shopDomain: jobData.shopDomain
         });
+        break;
+
+      case 'thankyou_notification':
+        emailSent = await sendFirstNotificationEmail({
+          email: subscription.email,
+          productTitle: subscription.productTitle || jobData.productTitle || 'Product',
+          productUrl: subscription.productUrl || constructProductUrl(jobData),
+          shopId: subscription.shopId,
+          shopDomain: jobData.shopDomain
+        });
+
+        // Se enviou com sucesso, agendar lembretes
+        if (emailSent) {
+          await scheduleReminders(subscription.id, subscription.shopId, jobData);
+        }
+        break;
+
+      case 'reminder_email':
+        // Verificar se ainda deve enviar lembrete
+        const shouldSendReminder = await shouldSendReminderNotification(subscription.id);
+        if (shouldSendReminder) {
+          emailSent = await sendReminderNotificationEmail({
+            email: subscription.email,
+            productTitle: subscription.productTitle || jobData.productTitle || 'Product',
+            productUrl: subscription.productUrl || constructProductUrl(jobData),
+            shopId: subscription.shopId,
+            shopDomain: jobData.shopDomain,
+            reminderNumber: jobData.reminderNumber || 1
+          });
+
+          // Se enviou com sucesso, atualizar contador de lembretes
+          if (emailSent) {
+            await db.subscription.update({
+              where: { id: subscription.id },
+              data: {
+                reminderCount: { increment: 1 },
+                lastReminderAt: new Date()
+              }
+            });
+
+            // Agendar próximo lembrete se não atingiu o máximo
+            const settings = await db.settings.findUnique({
+              where: { shopId: subscription.shopId }
+            });
+            
+            const maxReminders = settings?.reminderMaxCount || 2;
+            const currentReminders = subscription.reminderCount + 1; // +1 porque acabamos de incrementar
+            
+            if (currentReminders < maxReminders) {
+              const nextReminderTime = new Date();
+              const delayHours = settings?.reminderDelayHours || 24;
+              
+              if (delayHours < 1) {
+                nextReminderTime.setMinutes(nextReminderTime.getMinutes() + Math.round(delayHours * 60));
+              } else {
+                nextReminderTime.setHours(nextReminderTime.getHours() + delayHours);
+              }
+              
+              await addNotificationToQueue({
+                subscriptionId: subscription.id,
+                type: 'reminder_email',
+                scheduledFor: nextReminderTime,
+                data: {
+                  ...jobData,
+                  reminderNumber: currentReminders + 1
+                }
+              });
+            }
+          }
+        } else {
+          emailSent = true; // Marcar como "enviado" para não tentar novamente
+        }
         break;
 
       default:
@@ -233,6 +315,94 @@ export const cleanupOldJobs = async (): Promise<void> => {
     console.log('⚡ [QUEUE] Cleaned up old jobs:', deleted.count);
   } catch (error) {
     console.error('⚡ [QUEUE] Error cleaning up jobs:', error);
+  }
+};
+
+// Função para agendar lembretes após envio de thank you
+const scheduleReminders = async (subscriptionId: string, shopId: string, jobData: any): Promise<void> => {
+  try {
+    console.log('⚡ [REMINDER] Scheduling reminders for subscription:', subscriptionId);
+
+    // Buscar configurações da loja
+    const settings = await db.settings.findUnique({
+      where: { shopId }
+    });
+
+    console.log('⚡ [REMINDER] Settings found for shop:', shopId, {
+      exists: !!settings,
+      reminderEmailEnabled: settings?.reminderEmailEnabled,
+      reminderSmsEnabled: settings?.reminderSmsEnabled,
+      reminderDelayHours: settings?.reminderDelayHours,
+      reminderMaxCount: settings?.reminderMaxCount
+    });
+
+    if (!settings?.reminderEmailEnabled) {
+      console.log('⚡ [REMINDER] Reminder emails disabled for shop:', shopId);
+      return;
+    }
+
+    const delayHours = settings.reminderDelayHours || 24;
+    const firstReminderTime = new Date();
+    
+    if (delayHours < 1) {
+      // Para valores menores que 1 hora, calcular em minutos
+      firstReminderTime.setMinutes(firstReminderTime.getMinutes() + Math.round(delayHours * 60));
+    } else {
+      firstReminderTime.setHours(firstReminderTime.getHours() + delayHours);
+    }
+
+    // Agendar primeiro lembrete
+    await addNotificationToQueue({
+      subscriptionId,
+      type: 'reminder_email',
+      scheduledFor: firstReminderTime,
+      data: {
+        ...jobData,
+        reminderNumber: 1,
+        originalNotificationSentAt: new Date()
+      }
+    });
+
+    console.log('⚡ [REMINDER] First reminder scheduled for:', firstReminderTime);
+
+  } catch (error) {
+    console.error('⚡ [REMINDER] Error scheduling reminders:', error);
+  }
+};
+
+// Função para verificar se deve enviar lembrete
+const shouldSendReminderNotification = async (subscriptionId: string): Promise<boolean> => {
+  try {
+    const subscription = await db.subscription.findUnique({
+      where: { id: subscriptionId }
+    });
+
+    if (!subscription) {
+      console.log('⚡ [REMINDER] Subscription not found:', subscriptionId);
+      return false;
+    }
+
+    // Não enviar se compra foi detectada
+    if (subscription.purchaseDetectedAt) {
+      console.log('⚡ [REMINDER] Purchase already detected for subscription:', subscriptionId);
+      return false;
+    }
+
+    // Não enviar se subscription foi cancelada
+    if (subscription.status === 'cancelled') {
+      console.log('⚡ [REMINDER] Subscription cancelled:', subscription.status);
+      return false;
+    }
+
+    // Verificar se produto ainda está em estoque
+    // TODO: Implementar verificação de estoque via Shopify API se necessário
+
+    console.log('⚡ [REMINDER] Should send reminder for subscription:', subscriptionId);
+    return true;
+
+  } catch (error) {
+    console.error('⚡ [REMINDER] Error checking if should send reminder:', error);
+    return false;
   }
 };
 

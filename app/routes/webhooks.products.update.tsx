@@ -110,7 +110,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           try {
             await addNotificationToQueue({
               subscriptionId: subscription.id,
-              type: 'first_notification',
+              type: 'thankyou_notification',
               scheduledFor: new Date(), // Enviar imediatamente
               data: {
                 productId: product.id,

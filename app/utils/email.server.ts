@@ -31,6 +31,16 @@ interface FirstNotificationEmailData {
   shopDomain?: string;
 }
 
+// Interface para reminder notification email
+interface ReminderNotificationEmailData {
+  email: string;
+  productTitle: string;
+  productUrl: string;
+  shopId: string;
+  shopDomain?: string;
+  reminderNumber: number;
+}
+
 // Função para buscar template do banco
 const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
   try {
@@ -71,6 +81,26 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
           buttonBgColor: '#000000',
           buttonRadius: 4,
         };
+      } else if (type === 'thankyou') {
+        defaultData = {
+          subject: 'Thank you for subscribing!',
+          headline: 'Thank You! 🙏',
+          bodyText: 'Thank you for subscribing to back-in-stock notifications for this product. We\'ll notify you as soon as it\'s available again.',
+          buttonText: 'Visit Store',
+          buttonColor: '#ffffff',
+          buttonBgColor: '#000000',
+          buttonRadius: 4,
+        };
+      } else if (type === 'reminder') {
+        defaultData = {
+          subject: 'Still interested? Your Product is Still Available!',
+          headline: 'Don\'t Miss Out! ⏰',
+          bodyText: 'Just a friendly reminder that the product you were interested in is still available. Limited stock remaining!',
+          buttonText: 'Get It Now',
+          buttonColor: '#ffffff',
+          buttonBgColor: '#ff6b6b',
+          buttonRadius: 4,
+        };
       } else {
         defaultData = {
           subject: 'Thank you for subscribing!',
@@ -106,6 +136,26 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
         buttonBgColor: '#000000',
         buttonRadius: 4,
       };
+    } else if (type === 'thankyou') {
+      return {
+        subject: 'Thank you for subscribing!',
+        headline: 'Thank You! 🙏',
+        bodyText: 'Thank you for subscribing to back-in-stock notifications for this product. We\'ll notify you as soon as it\'s available again.',
+        buttonText: 'Visit Store',
+        buttonColor: '#ffffff',
+        buttonBgColor: '#000000',
+        buttonRadius: 4,
+      };
+    } else if (type === 'reminder') {
+      return {
+        subject: 'Still interested? Your Product is Still Available!',
+        headline: 'Don\'t Miss Out! ⏰',
+        bodyText: 'Just a friendly reminder that the product you were interested in is still available. Limited stock remaining!',
+        buttonText: 'Get It Now',
+        buttonColor: '#ffffff',
+        buttonBgColor: '#ff6b6b',
+        buttonRadius: 4,
+      };
     } else {
       return {
         subject: 'Thank you for subscribing!',
@@ -121,7 +171,7 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
 };
 
 // Função para gerar HTML do email
-const generateEmailHTML = (template: any, data: ThankYouEmailData | FirstNotificationEmailData, emailType: string = 'thankyou') => {
+const generateEmailHTML = (template: any, data: ThankYouEmailData | FirstNotificationEmailData | ReminderNotificationEmailData, emailType: string = 'thankyou') => {
   const { productTitle, productUrl, shopDomain } = data;
   
   console.log('📧 [HTML] Generating email with template:', {
@@ -158,7 +208,18 @@ const generateEmailHTML = (template: any, data: ThankYouEmailData | FirstNotific
           
           ${emailType === 'first' ? `
           <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+            You'll receive an email notification as soon as <strong>${productTitle}</strong> is back in stock.
+          </p>
+          ` : emailType === 'thankyou' ? `
+          <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
             <strong>${productTitle}</strong> is now available and ready for purchase. Don't miss out - get yours today!
+          </p>
+          ` : emailType === 'reminder' ? `
+          <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+            <strong>${productTitle}</strong> is still available but stock is limited. Don't wait too long!
+          </p>
+          <p style="color: #ff6b6b; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px;">
+            ⚠️ Limited Stock Remaining
           </p>
           ` : `
           <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
@@ -312,6 +373,71 @@ export const sendFirstNotificationEmail = async (data: FirstNotificationEmailDat
     
   } catch (error) {
     console.error('🎉 [FIRST] Error sending first notification email:', error);
+    return false;
+  }
+};
+
+
+// Função principal para enviar email de lembrete
+export const sendReminderNotificationEmail = async (data: ReminderNotificationEmailData): Promise<boolean> => {
+  try {
+    console.log(`⏰ [REMINDER ${data.reminderNumber}] Sending reminder email to:`, data.email);
+    
+    // Busca template personalizado para 'reminder'
+    const template = await getEmailTemplate(data.shopId, 'reminder');
+    
+    // Personalizar subject baseado no número do lembrete
+    const customTemplate = {
+      ...template,
+      subject: data.reminderNumber > 1 
+        ? `Final Reminder: ${data.productTitle} - Still Available!`
+        : template.subject
+    };
+    
+    // Gera HTML do email
+    const htmlContent = generateEmailHTML(customTemplate, data, 'reminder');
+    
+    // Configura transportador
+    const transporter = createTransporter();
+    
+    // Configura opções do email
+    const mailOptions = {
+      from: {
+        name: process.env.EMAIL_FROM_NAME || 'Back in Stock Notifications',
+        address: process.env.EMAIL_FROM_ADDRESS || 'noreply@notyys.app',
+      },
+      to: data.email,
+      subject: customTemplate.subject,
+      html: htmlContent,
+      text: `
+        ${customTemplate.headline}
+        
+        ${customTemplate.bodyText.replace('the product you were interested in', data.productTitle)}
+        
+        ${data.productTitle} is still available but stock is limited. Don't wait too long!
+        
+        Get it now: ${data.productUrl}
+        
+        This is reminder #${data.reminderNumber}.
+        
+        This email was sent by ${data.shopDomain || 'Notyys'}.
+      `.trim(),
+    };
+    
+    // Envia o email
+    const result = await transporter.sendMail(mailOptions);
+    
+    console.log(`⏰ [REMINDER ${data.reminderNumber}] Reminder email sent successfully:`, {
+      messageId: result.messageId,
+      to: data.email,
+      product: data.productTitle,
+      reminderNumber: data.reminderNumber,
+    });
+    
+    return true;
+    
+  } catch (error) {
+    console.error(`⏰ [REMINDER ${data.reminderNumber}] Error sending reminder email:`, error);
     return false;
   }
 };

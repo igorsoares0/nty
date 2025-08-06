@@ -3,7 +3,7 @@
 client_id = "6cdca756a3dcc2f7e886b190a95c33e1"
 name = "notyyss"
 handle = "notyyss"
-application_url = "https://louisville-column-pg-internship.trycloudflare.com"
+application_url = "https://satin-climbing-temple-vermont.trycloudflare.com"
 embedded = true
 
 [build]
@@ -22,7 +22,7 @@ uri = "/webhooks/products/update"
 scopes = "write_products,read_inventory"
 
 [auth]
-redirect_urls = ["https://louisville-column-pg-internship.trycloudflare.com/auth/callback", "https://louisville-column-pg-internship.trycloudflare.com/auth/shopify/callback", "https://louisville-column-pg-internship.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://satin-climbing-temple-vermont.trycloudflare.com/auth/callback", "https://satin-climbing-temple-vermont.trycloudflare.com/auth/shopify/callback", "https://satin-climbing-temple-vermont.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
