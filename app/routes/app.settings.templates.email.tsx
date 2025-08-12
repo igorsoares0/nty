@@ -303,7 +303,7 @@ export default function EmailTemplateEditor() {
 
   return (
     <Grid>
-      <Grid.Cell columnSpan={{xs: 6, sm: 6, md: 6, lg: 7, xl: 7}}>
+      <Grid.Cell columnSpan={{xs: 6, sm: 6, md: 6, lg: 5, xl: 5}}>
         <BlockStack gap="500">
           <div>
             <Text variant="headingMd" as="h2">
@@ -513,7 +513,7 @@ export default function EmailTemplateEditor() {
         </BlockStack>
       </Grid.Cell>
 
-      <Grid.Cell columnSpan={{xs: 6, sm: 6, md: 6, lg: 5, xl: 5}}>
+      <Grid.Cell columnSpan={{xs: 6, sm: 6, md: 6, lg: 7, xl: 7}}>
         <Card sectioned>
           <BlockStack gap="300">
             <Text variant="headingMd" as="h3">
