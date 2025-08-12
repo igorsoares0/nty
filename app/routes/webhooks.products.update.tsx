@@ -116,6 +116,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 productId: product.id,
                 productTitle: product.title,
                 productHandle: product.handle,
+                productImage: product.image?.src || product.images?.[0]?.src || null,
                 shopDomain: shop,
                 variantId: variant.id,
                 inventory: currentInventory

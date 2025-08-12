@@ -130,6 +130,7 @@ const processQueueJob = async (job: any): Promise<void> => {
           email: subscription.email,
           productTitle: subscription.productTitle || jobData.productTitle || 'Product',
           productUrl: subscription.productUrl || constructProductUrl(jobData),
+          productImage: jobData.productImage,
           shopId: subscription.shopId,
           shopDomain: jobData.shopDomain
         });
@@ -140,6 +141,7 @@ const processQueueJob = async (job: any): Promise<void> => {
           email: subscription.email,
           productTitle: subscription.productTitle || jobData.productTitle || 'Product',
           productUrl: subscription.productUrl || constructProductUrl(jobData),
+          productImage: jobData.productImage,
           shopId: subscription.shopId,
           shopDomain: jobData.shopDomain
         });
@@ -158,6 +160,7 @@ const processQueueJob = async (job: any): Promise<void> => {
             email: subscription.email,
             productTitle: subscription.productTitle || jobData.productTitle || 'Product',
             productUrl: subscription.productUrl || constructProductUrl(jobData),
+            productImage: jobData.productImage,
             shopId: subscription.shopId,
             shopDomain: jobData.shopDomain,
             reminderNumber: jobData.reminderNumber || 1

@@ -265,6 +265,17 @@ export default function EmailTemplateEditor() {
         ${headline}
       </h1>
       
+      <!-- Product Image -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <img src="https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_large.png" alt="Product Image" style="
+          max-width: 300px;
+          width: 100%;
+          height: auto;
+          border-radius: 8px;
+          border: 1px solid #e1e1e1;
+        ">
+      </div>
+      
       <p style="
         color: #666; 
         font-size: 16px; 

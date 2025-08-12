@@ -2,6 +2,97 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import db from "../db.server";
 import { sendThankYouEmail } from "../utils/email.server";
+import { authenticate } from "../shopify.server";
+
+// Função para buscar dados do produto via GraphQL
+const getProductData = async (productId: string, shopDomain: string) => {
+  try {
+    // Buscar session para esta loja
+    const session = await db.session.findFirst({
+      where: {
+        shop: shopDomain,
+        isOnline: false // Usar offline token para API calls
+      },
+      orderBy: {
+        expires: 'desc'
+      }
+    });
+
+    if (!session) {
+      console.log('🛍️ [PRODUCT] No session found for shop:', shopDomain);
+      return null;
+    }
+
+    // Fazer query GraphQL
+    const response = await fetch(`https://${shopDomain}/admin/api/2023-10/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': session.accessToken,
+      },
+      body: JSON.stringify({
+        query: `
+          query getProduct($id: ID!) {
+            product(id: $id) {
+              id
+              title
+              handle
+              featuredImage {
+                url
+                altText
+              }
+              images(first: 1) {
+                edges {
+                  node {
+                    url
+                    altText
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          id: `gid://shopify/Product/${productId}`
+        }
+      })
+    });
+
+    if (!response.ok) {
+      console.log('🛍️ [PRODUCT] GraphQL request failed:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.errors) {
+      console.log('🛍️ [PRODUCT] GraphQL errors:', data.errors);
+      return null;
+    }
+
+    const product = data.data?.product;
+    if (!product) {
+      console.log('🛍️ [PRODUCT] Product not found:', productId);
+      return null;
+    }
+
+    console.log('🛍️ [PRODUCT] Product data retrieved:', {
+      id: product.id,
+      title: product.title,
+      hasImage: !!(product.featuredImage?.url || product.images?.edges?.[0]?.node?.url)
+    });
+
+    return {
+      title: product.title,
+      handle: product.handle,
+      image: product.featuredImage?.url || product.images?.edges?.[0]?.node?.url || null
+    };
+
+  } catch (error) {
+    console.error('🛍️ [PRODUCT] Error fetching product data:', error);
+    return null;
+  }
+};
 
 // App Proxy endpoint: /subscribe (após remoção do prefixo /apps/notyys)
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -120,10 +211,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             }
           }
           
+          // Buscar dados do produto incluindo imagem
+          const productData = await getProductData(subscription.productId, fullShopDomain);
+          
           const emailSent = await sendThankYouEmail({
             email: subscription.email,
-            productTitle: subscription.productTitle || 'Product',
+            productTitle: productData?.title || subscription.productTitle || 'Product',
             productUrl: subscription.productUrl || '',
+            productImage: productData?.image || null,
             shopId: fullShopDomain,
             shopDomain: fullShopDomain,
           });

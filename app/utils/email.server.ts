@@ -18,6 +18,7 @@ interface ThankYouEmailData {
   email: string;
   productTitle: string;
   productUrl: string;
+  productImage?: string;
   shopId: string;
   shopDomain?: string;
 }
@@ -27,6 +28,7 @@ interface FirstNotificationEmailData {
   email: string;
   productTitle: string;
   productUrl: string;
+  productImage?: string;
   shopId: string;
   shopDomain?: string;
 }
@@ -36,6 +38,7 @@ interface ReminderNotificationEmailData {
   email: string;
   productTitle: string;
   productUrl: string;
+  productImage?: string;
   shopId: string;
   shopDomain?: string;
   reminderNumber: number;
@@ -172,7 +175,7 @@ const getEmailTemplate = async (shopId: string, type: string = 'thankyou') => {
 
 // Função para gerar HTML do email
 const generateEmailHTML = (template: any, data: ThankYouEmailData | FirstNotificationEmailData | ReminderNotificationEmailData, emailType: string = 'thankyou') => {
-  const { productTitle, productUrl, shopDomain } = data;
+  const { productTitle, productUrl, productImage, shopDomain } = data;
   
   console.log('📧 [HTML] Generating email with template:', {
     subject: template.subject,
@@ -199,6 +202,19 @@ const generateEmailHTML = (template: any, data: ThankYouEmailData | FirstNotific
             ${template.headline}
           </h1>
         </div>
+        
+        <!-- Product Image -->
+        ${productImage ? `
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${productImage}" alt="${productTitle}" style="
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #e1e1e1;
+          ">
+        </div>
+        ` : ''}
         
         <!-- Body -->
         <div style="margin-bottom: 30px;">
